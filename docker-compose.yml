@@ -15,7 +15,7 @@ services:
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
       - NODE_ENV=production
       - N8N_HOST=0.0.0.0
-      - WEBHOOK_URL=http://54.169.141.153:5678
+      - WEBHOOK_URL=https://theodorescsa.id.vn
       - N8N_SECURE_COOKIE=false
     volumes:
       - n8n_data:/home/node/.n8n
