@@ -17,6 +17,8 @@ services:
       - N8N_HOST=0.0.0.0
       - WEBHOOK_URL=https://theodorescsa.id.vn
       - N8N_SECURE_COOKIE=false
+      - N8N_USER_MANAGEMENT_DISABLED=false
+
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
