@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "id": "set_initial",
+      "name": "Set Attempt = 1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "attempt",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "loop_python",
+      "name": "Increment Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "language": "python",
+        "functionCode": "def main(input_items):\n    output = []\n    for item in input_items:\n        attempt = int(item['json'].get('attempt', 1)) + 1\n        output.append({\n            'json': {\n                'attempt': attempt\n            }\n        })\n    return output"
+      }
+    },
+    {
+      "id": "check_if_done",
+      "name": "Check If attempt == 10",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json[\"attempt\"]}}",
+              "operation": "equal",
+              "value2": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "done",
+      "name": "Reached 10 🎉",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "id": "go_back",
+      "name": "Go Back",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Attempt = 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Attempt = 1": {
+      "main": [
+        [
+          {
+            "node": "Increment Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Attempt": {
+      "main": [
+        [
+          {
+            "node": "Check If attempt == 10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If attempt == 10": {
+      "main": [
+        [
+          {
+            "node": "Reached 10 🎉",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Increment Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
