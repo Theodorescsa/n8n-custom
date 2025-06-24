@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - n8n-network
+
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
@@ -8,25 +24,49 @@ services:
     ports:
       - "5678:5678"
     environment:
+      - DB_TYPE=mysqldb
+      - DB_MYSQLDB_HOST=mysql
+      - DB_MYSQLDB_PORT=3306
+      - DB_MYSQLDB_DATABASE=${MYSQL_DATABASE}
+      - DB_MYSQLDB_USER=${MYSQL_USER}
+      - DB_MYSQLDB_PASSWORD=${MYSQL_PASSWORD}
       - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
-      - N8N_BASIC_AUTH_ACTIVE=false
-      - N8N_ENCRYPTION_KEY=130de6a5b60dce62a9ff594da9a88a8c3033f4a3d4e84f4322981c076ddca9b9
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
-      - NODE_ENV=production
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_HOST=0.0.0.0
-      - WEBHOOK_URL=https://theodorescsa.id.vn
-      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=${WEBHOOK_URL}
       - N8N_USER_MANAGEMENT_DISABLED=false
-
     volumes:
       - n8n_data:/home/node/.n8n
+    depends_on:
+      - mysql
     networks:
       - n8n-network
+
+  backup:
+    image: alpine
+    container_name: mysql_backup
+    restart: unless-stopped
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backups:/backup
+    entrypoint: >
+      sh -c "apk add --no-cache mariadb-client &&
+             while true; do
+               mysqldump -h mysql -u n8n_user -pDublin123@ n8n_db > /backup/backup_$(date +%F_%T).sql;
+               sleep 86400;
+             done"
+    networks:
+      - n8n-network
+    depends_on:
+      - mysql
+
+volumes:
+  n8n_data:
+  mysql_data:
 
 networks:
   n8n-network:
     driver: bridge
-
-volumes:
-  n8n_data:
